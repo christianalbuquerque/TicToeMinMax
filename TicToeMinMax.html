@@ -1,4 +1,7 @@
 <style>
+
+  /* Cria e estiliza todo o tabuleiro do jogo */
+
     #game {
       display: grid;
       grid-template-columns: repeat(3, 100px);
@@ -45,20 +48,23 @@
       }
     };
   }
-  function deepCopy(x) {
+  function trueCopy(x) { /* Faz com que o JS não altere a referência original e sim faça uma cópia antes */
     return JSON.parse(JSON.stringify(x));
   }
-  function AI() {
+
+  function AI() { /* Função responsável por deixar a IA "inteligente", aqui ela vai checar o estado atual do tabuleiro e a partir disso decidir a melhor jogada */
     action = bestAction(board, player);
     var div = document.getElementById('c'+action[0]+','+action[1]);
     div.click();
   }  
-  function init() {
+
+  function init() { /* Vai inicilizar o tabuleiro vazio tendo a primeira jogada o X */
     player = 'X';
     board = [['','',''],['','',''],['','','']];
     drawBoard(board);
   }
-  function drawBoard(board) {
+
+  function drawBoard(board) { /* Desenha o tabuleiro na tela */
     for (var row in board) {
       for (var col in board[row]) {
         var id = 'c' + row + ',' + col;
@@ -67,7 +73,8 @@
       }    
     }
   }
-  function boardFull(board) {
+
+  function boardFull(board) { /* Checa se o tabuleiro está cheio/completo */
     for (var row in board) {
       for (var col in board[row]) {
         if (board[row][col] == '') return false;
@@ -75,7 +82,9 @@
     }
     return true;
   }
-  function checkWinner(board) {
+
+  
+  function checkWinner(board) { /* Verifica se existe algum ganhador */
     var divs = document.querySelectorAll('#game div');
     if (board[0][0] == board[0][1] && board[0][0] == board[0][2]) return board[0][0];
     if (board[1][0] == board[1][1] && board[1][0] == board[1][2]) return board[1][0];
@@ -92,12 +101,12 @@
   </script>
   
   <script>
-  function movement(board, pos, player) {	//Computa resultado da jogada
-      var new_board = deepCopy(board);
+  function movement(board, pos, player) {	/* Responsável por aplicar a jogada realizada dentro do tabuleiro */
+      var new_board = trueCopy(board);
         new_board[pos[0]][pos[1]] = player;
         return new_board;
   }
-  function possibleMovements(board) {	//Lista jogadas possíveis
+  function possibleMovements(board) {	/* Lista todas as jogadas possíveis com o atual tabuleiro. Aqui vai ser gerado todos os filhos, pois vai analisar todas as possibilidades */
       var movements = [];
         for (var i = 0; i < 3; i++) {
         for (var j = 0; j < 3; j++) {
@@ -106,7 +115,7 @@
       }
         return movements; 
   }
-  function minMax(board, player, currentPlayer) {
+  function minMax(board, player, currentPlayer) { /* Função Min Max */
       var winner = checkWinner(board);
         if (winner == currentPlayer) return 1;
         if (winner && winner != currentPlayer) return -1;
@@ -115,7 +124,7 @@
     
       var movements = possibleMovements(board);
   
-        if (player == currentPlayer) {	//MAX
+        if (player == currentPlayer) {	/* MAX */
             let bestValue = -Infinity;
           for (let i in movements) {
             let result = movement(board, movements[i], player);
@@ -126,7 +135,7 @@
           }
             return bestValue;      
       }
-        else {	//MIN
+        else {	/* MIN */
             let bestValue = Infinity;
           for (var i in movements) {
             let result = movement(board, movements[i], player);
@@ -138,7 +147,7 @@
             return bestValue;            
       }
   }
-  function bestAction(board, currentPlayer) {	//Retorna melhor jogada. 'currentPlayer' = quem é o max
+  function bestAction(board, currentPlayer) {	/* Retorna a melhor jogada possível no cenário, utilizada pela IA */
       var movements = possibleMovements(board);
         var bestValue = -Infinity;
         var bestAction = null;
