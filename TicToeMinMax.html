@@ -1,0 +1,155 @@
+<style>
+    #game {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+    }
+    #game div {
+      border: 1px solid black;
+      line-height: 100px;
+      font-size: xx-large;
+      font-family: Arial;
+      text-align: center;
+      cursor: pointer;
+    }
+  </style>
+  <div id="game">
+    <div id="c0,0"></div><div id="c0,1"></div><div id="c0,2"></div>
+    <div id="c1,0"></div><div id="c1,1"></div><div id="c1,2"></div>
+    <div id="c2,0"></div><div id="c2,1"></div><div id="c2,2"></div>
+  </div>
+  
+  <script>
+  var divs = document.querySelectorAll('#game div');
+  var player, board;
+    
+  for (var i in divs) {
+    divs[i].onclick = (e)=>{
+      var coords = e.target.id.split('c')[1].split(',');
+      var row = parseInt(coords[0]);
+      var col = parseInt(coords[1]);
+      if (board[row][col] == '') {
+        board[row][col] = player;
+        player = player == 'X' ? 'O' : 'X';
+        var winner = checkWinner(board);
+        if (winner) {
+          setTimeout(()=>{alert(winner + ' Venceu!');init();}, 16);
+        }
+        else if (boardFull(board)) {
+          setTimeout(()=>{alert('Empate!');init();}, 16);
+        }
+        else if (player == 'O') {
+          AI();
+        }
+        drawBoard(board);
+      }
+    };
+  }
+  function deepCopy(x) {
+    return JSON.parse(JSON.stringify(x));
+  }
+  function AI() {
+    action = bestAction(board, player);
+    var div = document.getElementById('c'+action[0]+','+action[1]);
+    div.click();
+  }  
+  function init() {
+    player = 'X';
+    board = [['','',''],['','',''],['','','']];
+    drawBoard(board);
+  }
+  function drawBoard(board) {
+    for (var row in board) {
+      for (var col in board[row]) {
+        var id = 'c' + row + ',' + col;
+        var div = document.getElementById(id);
+        div.innerText = board[row][col];
+      }    
+    }
+  }
+  function boardFull(board) {
+    for (var row in board) {
+      for (var col in board[row]) {
+        if (board[row][col] == '') return false;
+      }
+    }
+    return true;
+  }
+  function checkWinner(board) {
+    var divs = document.querySelectorAll('#game div');
+    if (board[0][0] == board[0][1] && board[0][0] == board[0][2]) return board[0][0];
+    if (board[1][0] == board[1][1] && board[1][0] == board[1][2]) return board[1][0];
+    if (board[2][0] == board[2][1] && board[2][0] == board[2][2]) return board[2][0];
+    if (board[0][0] == board[1][0] && board[0][0] == board[2][0]) return board[0][0];
+    if (board[0][1] == board[1][1] && board[0][1] == board[2][1]) return board[0][1];
+    if (board[0][2] == board[1][2] && board[0][2] == board[2][2]) return board[0][2];
+    if (board[0][0] == board[1][1] && board[0][0] == board[2][2]) return board[0][0];
+    if (board[0][2] == board[1][1] && board[0][2] == board[2][0]) return board[0][2];
+    return null;
+  }
+    
+  init();
+  </script>
+  
+  <script>
+  function movement(board, pos, player) {	//Computa resultado da jogada
+      var new_board = deepCopy(board);
+        new_board[pos[0]][pos[1]] = player;
+        return new_board;
+  }
+  function possibleMovements(board) {	//Lista jogadas possíveis
+      var movements = [];
+        for (var i = 0; i < 3; i++) {
+        for (var j = 0; j < 3; j++) {
+          if (board[i][j] == '') movements.push([i,j]);
+        }      
+      }
+        return movements; 
+  }
+  function minMax(board, player, currentPlayer) {
+      var winner = checkWinner(board);
+        if (winner == currentPlayer) return 1;
+        if (winner && winner != currentPlayer) return -1;
+        if (!winner && boardFull(board)) return 0;
+        
+    
+      var movements = possibleMovements(board);
+  
+        if (player == currentPlayer) {	//MAX
+            let bestValue = -Infinity;
+          for (let i in movements) {
+            let result = movement(board, movements[i], player);
+            let value = minMax(result, player == 'X' ? 'O' : 'X', currentPlayer);
+            if (value > bestValue) {
+              bestValue = value;
+            }
+          }
+            return bestValue;      
+      }
+        else {	//MIN
+            let bestValue = Infinity;
+          for (var i in movements) {
+            let result = movement(board, movements[i], player);
+            let value = minMax(result, player == 'X' ? 'O' : 'X', currentPlayer);
+            if (value < bestValue) {
+                bestValue = value;
+            }
+          }
+            return bestValue;            
+      }
+  }
+  function bestAction(board, currentPlayer) {	//Retorna melhor jogada. 'currentPlayer' = quem é o max
+      var movements = possibleMovements(board);
+        var bestValue = -Infinity;
+        var bestAction = null;
+        for (var i in movements) {
+        var result = movement(board, movements[i], currentPlayer);
+        var value = minMax(result, currentPlayer == 'X' ? 'O' : 'X', currentPlayer);
+        if (value > bestValue) {
+          bestValue = value;
+          bestAction = movements[i];
+        }
+      }
+        return bestAction;
+  }
+  </script>
